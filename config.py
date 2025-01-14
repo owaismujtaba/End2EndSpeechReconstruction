@@ -1,8 +1,11 @@
 import os
+import shutil
 from pathlib import Path
 
 CURRENT_DIR = os.getcwd()
 BIDS_DIR = Path(CURRENT_DIR, 'Data')
+
+TERMINAL_WIDTH = shutil.get_terminal_size().columns
 
 # Data Specification
 EEG_SR = 1024

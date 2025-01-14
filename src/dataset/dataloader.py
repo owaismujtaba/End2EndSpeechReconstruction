@@ -7,20 +7,22 @@ import warnings
 
 import config as config
 from src.utils.mel_filter_bank import MelFilterBank
+from src.utils.utils import Colors, printSectionHeader
 import pdb
 
 warnings.filterwarnings("ignore")
 warnings.filterwarnings("ignore", category=RuntimeWarning, message="")
 
 
+
 class DataLoader:
     def __init__(self, subject_id='01'):
-        print('Initializing DataLoader Class for subject:::', subject_id)
-        self.subject_id = subject_id 
+        printSectionHeader(f'{Colors.OKBLUE}🗂️ Initializing DataLoader Class for subject:::{Colors.ENDC} {subject_id}')
+        self.subject_id = subject_id
         self.read_data()
         
     def read_data(self):
-        print('Reading data for subject::: ', self.subject_id)
+        print(f'{Colors.OKCYAN}📥 Reading data for subject:::{Colors.ENDC} {self.subject_id}')
         bids_path = config.BIDS_DIR
         io = NWBHDF5IO(
             os.path.join(
@@ -42,20 +44,21 @@ class DataLoader:
             delimiter='\t'
         )
         self.channels = np.array(channels['name'])
-        print(f'Audio::{self.audio.shape}, iEEG::{self.eeg.shape}')
-        print('Data read sucessfully')
+        print(f'{Colors.OKGREEN}✅ Audio::{self.audio.shape}, iEEG::{self.eeg.shape}{Colors.ENDC}')
+        print(f'{Colors.OKGREEN}✅ Data read successfully{Colors.ENDC}')
 
 class EegAudioFeatureExtractor:
     def __init__(self, eeg, audio):
-        print('Initializing EegAudioFeatureExtractor')
+        printSectionHeader(f'{Colors.OKBLUE}🔍 Initializing EegAudioFeatureExtractor{Colors.ENDC}')
         self.eeg_sr = config.EEG_SR
         self.eeg = eeg
         self.audio = audio
 
         self.load_eeg_features()
 
+
     def load_eeg_features(self):
-        print('Loading AUDIO and EEG Features')
+        print(f'{Colors.OKCYAN}📊 Loading AUDIO and EEG Features{Colors.ENDC}')
         eeg_feature_extractor = EegFeatures(self.eeg)
         self.eeg_features = eeg_feature_extractor.features
         audio_feature_extractor = AudioFeatures(self.audio)
@@ -65,11 +68,13 @@ class EegAudioFeatureExtractor:
             t_len = min(self.audio_features.shape[0], self.eeg_features.shape[0])
             self.audio_features = self.audio_features[:t_len, :]
             self.eeg_features = self.eeg_features[:t_len, :]
-
+        print(f'{Colors.OKGREEN}✅ AudioFeatures::{self.audio_features.shape}{Colors.ENDC}')
+        print(f'{Colors.OKGREEN}✅ EEG Features:: iEEG::{self.eeg_features.shape}{Colors.ENDC}')
+      
 
 class AudioFeatures:
     def __init__(self, audio):
-        print('Initializing AudioFeatures Class')
+        printSectionHeader(f'{Colors.OKBLUE}🎵 Initializing AudioFeatures Class{Colors.ENDC}')
         self.audio = audio
         self.audio_sr = config.AUDIO_SR
         self.win_length = config.WIN_LENGTH
@@ -81,15 +86,15 @@ class AudioFeatures:
         self.segment_and_extract_mel_spectrograms()
 
     def preprocess_audio(self):
-        print('Preprocessing Audio')
-        audio = scipy.signal.decimate(self.audio, int(self.audio_sr/config.TARGET_AUDIO_SR))
+        print(f'{Colors.OKCYAN}🔧 Preprocessing Audio{Colors.ENDC}')
+        audio = scipy.signal.decimate(self.audio, int(self.audio_sr / config.TARGET_AUDIO_SR))
         audio = np.int16(audio / np.max(np.abs(audio)) * 32767)
         self.audio_sr = config.TARGET_AUDIO_SR
         self.audio = audio
-        print('Preprocessing completed')
+        print(f'{Colors.OKGREEN}✅ Preprocessing completed{Colors.ENDC}')
 
     def segment_and_extract_mel_spectrograms(self):
-        print('Segementing and extrating spectrograms')
+        print(f'{Colors.OKCYAN}📊 Segmenting and extracting spectrograms{Colors.ENDC}')
         audio = self.audio
         num_windows = int(
             np.floor((audio.shape[0] - self.win_length * self.audio_sr)
@@ -110,11 +115,12 @@ class AudioFeatures:
         spectrogram = np.abs(spectrogram)
         spectrograms = mfb.toLogMels(spectrogram).astype('float')
         self.feataures = spectrograms
-        print("Segmentation and spectrogram extraction completed")
+        print(f'{Colors.OKGREEN}✅ Segmentation and spectrogram extraction completed{Colors.ENDC}')
+
 
 class EegFeatures:
     def __init__(self, eeg):
-        print('Initializing EegFeatures Class')
+        printSectionHeader(f'{Colors.OKBLUE}🧠 Initializing EegFeatures Class{Colors.ENDC}')
         self.eeg = eeg
         self.eeg_sr = config.EEG_SR
         self.win_length = config.WIN_LENGTH
@@ -127,7 +133,7 @@ class EegFeatures:
         self.add_temporal_context()
 
     def preprocess_eeg(self):
-        print('Preprocessing  EEG')
+        print(f'{Colors.OKCYAN}🔧 Preprocessing EEG{Colors.ENDC}')
         eeg = scipy.signal.detrend(self.eeg, axis=0)
         sos = scipy.signal.iirfilter(4, [70 / (self.eeg_sr / 2), 170 / (self.eeg_sr / 2)], btype='bandpass', output='sos')
         eeg = scipy.signal.sosfiltfilt(sos, eeg, axis=0)
@@ -139,28 +145,25 @@ class EegFeatures:
             )
             eeg = scipy.signal.sosfiltfilt(sos, eeg, axis=0)
         self.eeg = eeg
-        print('Preprocessing Sucessfully')
-
+        print(f'{Colors.OKGREEN}✅ Preprocessing Successfully completed{Colors.ENDC}')
 
     def segment_and_extract_features(self):
-        print('Segemnting the EEG and extracting features')
+        print(f'{Colors.OKCYAN}📊 Segmenting EEG and extracting features{Colors.ENDC}')
         eeg = self.hilbert_transform(self.eeg)
         num_windows = int(np.floor(
             (eeg.shape[0] - self.win_length * self.eeg_sr) / (self.frameshift * self.eeg_sr))
         )
         feat = np.zeros((num_windows, eeg.shape[1]))
         
-        # segement the eeg and store the mean of the segment in every channel
-        # as a feature 
         for win in range(num_windows):
             start = int(np.floor((win * self.frameshift) * self.eeg_sr))
             stop = int(np.floor(start + self.win_length * self.eeg_sr))
             feat[win, :] = np.mean(eeg[start:stop, :], axis=0)
         self.segmented_features = feat
-        print('EEG segemntation and feature extraction completed')
+        print(f'{Colors.OKGREEN}✅ EEG segmentation and feature extraction completed{Colors.ENDC}')
 
     def add_temporal_context(self):
-        print(f'Adding temporal context with model order {config.MODEL_ORDER}, step size {config.STEP_SIZE}')
+        print(f'{Colors.OKCYAN}⏳ Adding temporal context with model order {config.MODEL_ORDER}, step size {config.STEP_SIZE}{Colors.ENDC}')
         features = self.segmented_features
         num_windows = features.shape[0] - (2 * self.model_order * self.step_size)
         feat_stacked = np.zeros((num_windows, (2 * self.model_order + 1) * features.shape[1]))
@@ -170,9 +173,8 @@ class EegFeatures:
             feat_stacked[i - self.model_order * self.step_size, :] = ef.flatten()
 
         self.features = feat_stacked
-        print('Adding temporal context completed')
+        print(f'{Colors.OKGREEN}✅ Adding temporal context completed{Colors.ENDC}')
 
     @staticmethod
     def hilbert_transform(x):
         return scipy.signal.hilbert(x, scipy.fftpack.next_fast_len(len(x)), axis=0)[:len(x)]
-
