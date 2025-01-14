@@ -21,4 +21,4 @@ def printSectionHeader(message):
     """
     print("\n" + "=" * config.TERMINAL_WIDTH)
     print(f'{message.center(config.TERMINAL_WIDTH)}')
-    print("=" * config.TERMINAL_WIDTH + "\n")
+    print("=" * config.TERMINAL_WIDTH)
