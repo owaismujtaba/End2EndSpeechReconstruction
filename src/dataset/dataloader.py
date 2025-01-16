@@ -18,10 +18,17 @@ class DataLoader:
         self.eeg_features = feature_extractor.eeg_features
         self.audio_features = feature_extractor.audio_features
 
-    def train_test_pipeline(self):
+    def get_train_test_data(self):
         X_train, X_test, y_train, y_test = train_test_split(
             self.eeg_features, self.audio_features, 
             test_size=0.2, random_state=42
         )
        
         return X_train, y_train, X_test, y_test
+    
+
+def dataset_loader_pipeline(subject_id='sub-01'):
+    dataset_loader = DataLoader(subject_id=subject_id)
+    X_train, y_train, X_test, y_test = dataset_loader.get_train_test_data()
+
+    return X_train, y_train, X_test, y_test
