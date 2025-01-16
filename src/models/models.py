@@ -6,11 +6,11 @@ from tensorflow.keras.layers import (
 )
 
 class NeuroInceptDecoder(tf.keras.Model):
-    def __init__(self, n_classes, n_channels, n_timepoints):
+    def __init__(self, n_classes, n_channels, n_features):
         super(NeuroInceptDecoder, self).__init__()
         self.n_classes = n_classes
-        self.n_timepoints = n_timepoints
-        self.inputs = (None, self.n_channels, self.n_timepoints)
+        self.n_features = n_features
+        self.n_channels = n_channels
 
         # Define layers for the inception module
         self.conv1x1 = Conv1D(64, 1, padding='same', activation='relu')
@@ -20,13 +20,11 @@ class NeuroInceptDecoder(tf.keras.Model):
         self.maxpool_conv = Conv1D(64, 1, padding='same', activation='relu')
 
         # Define GRU layers
-        self.gru1 = GRU(128, return_sequences=True, activation='relu')
-        self.gru2 = GRU(256, return_sequences=True, activation='relu')
-        self.gru3 = GRU(512, return_sequences=False, activation='relu')
+        self.gru1 = GRU(128, return_sequences=True)
+        self.gru2 = GRU(256, return_sequences=True)
+        self.gru3 = GRU(512, return_sequences=False)
 
         # Define additional layers
-        self.reshape = Reshape((1, 512))
-        self.flatten = Flatten()
         self.dense1 = Dense(1024, activation='relu')
         self.dense2 = Dense(1024, activation='relu')
         self.dense3 = Dense(512, activation='relu')
@@ -52,10 +50,6 @@ class NeuroInceptDecoder(tf.keras.Model):
         x = self.gru2(x)
         x = self.gru3(x)
 
-        x = self.reshape(x)
-        x = self.inception_module(x)
-        x = self.flatten(x)
-
         x = self.dense1(x)
         x = self.dense2(x)
         x = self.dense3(x)
@@ -65,14 +59,3 @@ class NeuroInceptDecoder(tf.keras.Model):
         output = self.output_layer(x)
 
         return output
-
-# Example usage
-n_classes = 128
-n_channels = 1
-n_timepoints = 1143
-
-model = NeuroInceptDecoder(n_classes, n_channels, n_timepoints)
-
-input_tensor = tf.random.normal([32, n_timepoints, n_channels, 1])
-output = model(input_tensor)
-print(output.shape)  # Should be (32, n_classes)
