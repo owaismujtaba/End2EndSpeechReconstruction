@@ -18,7 +18,6 @@ class DataLoader:
         )
         self.eeg_features = feature_extractor.eeg_features
         self.audio_features = feature_extractor.audio_features
-        pdb.set_trace()
     def get_train_test_data(self):
         X_train, X_test, y_train, y_test = train_test_split(
             self.eeg_features, self.audio_features, 
