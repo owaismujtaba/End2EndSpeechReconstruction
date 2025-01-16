@@ -154,7 +154,7 @@ class EegFeatures:
         print(f'{Colors.OKGREEN}✅ Preprocessing Successfully completed{Colors.ENDC}')
 
     def segment_and_extract_features(self):
-        print(f'{Colors.OKCYAN}📊 Segmenting EEG and extracting features{Colors.ENDC}')
+        print(f'{Colors.OKCYAN}📊 Segmenting EEG and extracting features window size :{self.win_length}{Colors.ENDC}')
         eeg = self.hilbert_transform(self.eeg)
         num_windows = int(np.floor(
             (eeg.shape[0] - self.win_length * self.eeg_sr) / (self.frameshift * self.eeg_sr))
@@ -166,17 +166,18 @@ class EegFeatures:
             stop = int(np.floor(start + self.win_length * self.eeg_sr))
             feat[win, :] = np.mean(eeg[start:stop, :], axis=0)
         self.segmented_features = feat
+        print(f'{Colors.OKGREEN} Segemented EEG shape : {self.segmented_features.shape}{Colors.ENDC}')
         print(f'{Colors.OKGREEN}✅ EEG segmentation and feature extraction completed{Colors.ENDC}')
 
     def add_temporal_context(self):
         print(f'{Colors.OKCYAN}⏳ Adding temporal context with model order {config.MODEL_ORDER}, step size {config.STEP_SIZE}{Colors.ENDC}')
         features = self.segmented_features
         num_windows = features.shape[0] - (2 * self.model_order * self.step_size)
-        feat_stacked = np.zeros((num_windows, (2 * self.model_order + 1) * features.shape[1]))
+        feat_stacked = np.zeros((num_windows, (2 * self.model_order + 1),  features.shape[1]))
 
         for i in range(self.model_order * self.step_size, features.shape[0] - self.model_order * self.step_size):
             ef = features[i - self.model_order * self.step_size:i + self.model_order * self.step_size + 1:self.step_size, :]
-            feat_stacked[i - self.model_order * self.step_size, :] = ef.flatten()
+            feat_stacked[i - self.model_order * self.step_size, :] = ef
 
         self.features = feat_stacked
         print(f'{Colors.OKGREEN}✅ Adding temporal context completed{Colors.ENDC}')

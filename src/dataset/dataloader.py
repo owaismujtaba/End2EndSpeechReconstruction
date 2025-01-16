@@ -1,6 +1,7 @@
 from src.utils.utils import printSectionHeader, Colors
 from src.dataset.data_reader import DataReader, EegAudioFeatureExtractor
 from sklearn.model_selection import train_test_split
+import pdb
 
 class DataLoader:
     def __init__(self, subject_id='sub-01'):
@@ -17,7 +18,7 @@ class DataLoader:
         )
         self.eeg_features = feature_extractor.eeg_features
         self.audio_features = feature_extractor.audio_features
-
+        pdb.set_trace()
     def get_train_test_data(self):
         X_train, X_test, y_train, y_test = train_test_split(
             self.eeg_features, self.audio_features, 
