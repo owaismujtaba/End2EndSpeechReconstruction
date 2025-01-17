@@ -6,6 +6,7 @@ from tensorflow.keras.layers import (
     Conv1D, MaxPooling1D, GRU, Dense, Flatten,
     Reshape, concatenate, Input
 )
+import config as config
 
 class NeuroInceptDecoder(tf.keras.Model):
     def __init__(self, n_classes, n_channels, n_features):
@@ -73,7 +74,7 @@ class NeuroInceptDecoder(tf.keras.Model):
         loss = self.compiled_loss(y_val, y_pred)
         return loss
 
-    def train(self, X, y, batch_size=32, epochs=10, learning_rate=0.001, val_size=0.2):
+    def train(self, X, y, batch_size=32, epochs=config.EPOCHS, learning_rate=0.001, val_size=0.2):
         self.optimizer = Adam(learning_rate)
         self.compiled_loss = tf.keras.losses.MeanSquaredError()
 
