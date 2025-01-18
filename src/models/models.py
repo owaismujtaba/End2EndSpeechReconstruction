@@ -7,6 +7,8 @@ from tensorflow.keras.layers import (
     Reshape, concatenate, Input
 )
 import config as config
+import pandas as pd
+from tqdm import tqdm
 
 class NeuroInceptDecoder(tf.keras.Model):
     def __init__(self, n_classes, n_channels, n_features):
@@ -60,19 +62,22 @@ class NeuroInceptDecoder(tf.keras.Model):
 
         return output
 
-
     def train_step(self, X, y):
         with tf.GradientTape() as tape:
             y_pred = self(X)
             loss = self.compiled_loss(y, y_pred)
         grads = tape.gradient(loss, self.trainable_variables)
         self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
-        return loss
+
+        # Calculate accuracy
+        accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(y, axis=1), tf.argmax(y_pred, axis=1)), tf.float32))
+        return loss, accuracy
 
     def eval(self, X_val, y_val):
         y_pred = self(X_val)
         loss = self.compiled_loss(y_val, y_pred)
-        return loss
+        accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(y_val, axis=1), tf.argmax(y_pred, axis=1)), tf.float32))
+        return loss, accuracy
 
     def train(self, X, y, batch_size=32, epochs=config.EPOCHS, learning_rate=0.001, val_size=0.2):
         self.optimizer = Adam(learning_rate)
@@ -80,22 +85,40 @@ class NeuroInceptDecoder(tf.keras.Model):
 
         X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=val_size, shuffle=True)
 
+        metrics = pd.DataFrame(columns=['Epoch', 'Train Loss', 'Train Accuracy', 'Validation Loss', 'Validation Accuracy'])
+
         for epoch in range(epochs):
             epoch_loss = 0
+            epoch_accuracy = 0
             num_batches = X_train.shape[0] // batch_size
 
             indices = tf.random.shuffle(tf.range(X_train.shape[0]))
             X_train_shuffled = tf.gather(X_train, indices)
             y_train_shuffled = tf.gather(y_train, indices)
 
-            for i in range(num_batches):
-                batch_X = X_train_shuffled[i * batch_size : (i + 1) * batch_size]
-                batch_y = y_train_shuffled[i * batch_size : (i + 1) * batch_size]
+            with tqdm(total=num_batches, desc=f"Epoch {epoch + 1}/{epochs}", unit="batch") as pbar:
+                for i in range(num_batches):
+                    batch_X = X_train_shuffled[i * batch_size : (i + 1) * batch_size]
+                    batch_y = y_train_shuffled[i * batch_size : (i + 1) * batch_size]
 
-                loss = self.train_step(batch_X, batch_y)
-                epoch_loss += loss
+                    loss, accuracy = self.train_step(batch_X, batch_y)
+                    epoch_loss += loss
+                    epoch_accuracy += accuracy
+                    pbar.update(1)
 
             epoch_loss /= num_batches
+            epoch_accuracy /= num_batches
 
-            val_loss = self.eval(X_val, y_val)
-            print(f'Epoch {epoch + 1}/{epochs}, Train Loss: {epoch_loss.numpy()}, Validation Loss: {val_loss.numpy()}')
+            val_loss, val_accuracy = self.eval(X_val, y_val)
+
+            metrics = pd.concat([metrics, pd.DataFrame({
+                'Epoch': [epoch + 1],
+                'Train Loss': [epoch_loss.numpy()],
+                'Train Accuracy': [epoch_accuracy.numpy()],
+                'Validation Loss': [val_loss.numpy()],
+                'Validation Accuracy': [val_accuracy.numpy()]
+            })], ignore_index=True)
+
+            print(f"Epoch {epoch + 1}/{epochs}, Train Loss: {epoch_loss.numpy()}, Train Accuracy: {epoch_accuracy.numpy()}, Validation Loss: {val_loss.numpy()}, Validation Accuracy: {val_accuracy.numpy()}")
+
+        return metrics

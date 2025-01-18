@@ -28,7 +28,7 @@ class ModelTrainer:
         
         history_path = Path(self.model_dir, 'history.csv')
         pdb.set_trace()
-        history.history.to_csv(history_path)
+        history.to_csv(history_path)
         model.save(self.model_path)
         print("✅ Model Training Complete ✅")
 
