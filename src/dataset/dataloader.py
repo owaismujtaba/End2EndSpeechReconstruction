@@ -1,6 +1,10 @@
-from src.utils.utils import printSectionHeader, Colors
-from src.dataset.data_reader import DataReader, EegAudioFeatureExtractor
 from sklearn.model_selection import train_test_split
+
+
+
+from src.utils.utils import printSectionHeader, Colors, normalize_z_score
+from src.dataset.data_reader import DataReader, EegAudioFeatureExtractor
+
 import pdb
 
 class DataLoader:
@@ -19,8 +23,9 @@ class DataLoader:
         self.eeg_features = feature_extractor.eeg_features
         self.audio_features = feature_extractor.audio_features
     def get_train_test_data(self):
+        eeg_features = normalize_z_score(self.eeg_features)
         X_train, X_test, y_train, y_test = train_test_split(
-            self.eeg_features, self.audio_features, 
+            eeg_features, self.audio_features, 
             test_size=0.2, random_state=42
         )
        

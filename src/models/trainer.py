@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from pathlib import Path
-
+import pdb
 
 from sklearn.metrics import classification_report
 from src.utils.utils import  printSectionHeader
@@ -27,6 +27,7 @@ class ModelTrainer:
         history = model.train(X, y)
         
         history_path = Path(self.model_dir, 'history.csv')
+        pdb.set_trace()
         history.history.to_csv(history_path)
         model.save(self.model_path)
         print("✅ Model Training Complete ✅")
