@@ -12,6 +12,7 @@ TERMINAL_WIDTH = shutil.get_terminal_size().columns
 # Data Specification
 EEG_SR = 1024
 AUDIO_SR = 48000
+N_SUBJECTS = 10
 
 # Audio and EEG features specifications
 WIN_LENGTH = 0.05
@@ -22,5 +23,5 @@ TARGET_AUDIO_SR = 16000
 NO_FORMANTS = 128
 
 # Training Parameters
-EPOCHS = 1
+EPOCHS = 100
 BATCH_SIZE=128

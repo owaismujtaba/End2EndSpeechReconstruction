@@ -36,7 +36,7 @@ def train_decoder_on_all_subjects():
     printSectionHeader('Training Decoder on All Subjects')
     pcc_means = []
     subject_ids = []
-    for index in range(1, 4):
+    for index in range(1, config.N_SUBJECTS):
         subject_id = f'sub-0{index}'
     
         pcc_mean = decoder_training_pipeline(subject_id)
