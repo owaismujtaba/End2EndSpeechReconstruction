@@ -76,8 +76,7 @@ class NeuroInceptDecoder(tf.keras.Model):
     def eval(self, X_val, y_val):
         y_pred = self(X_val)
         loss = self.compiled_loss(y_val, y_pred)
-        accuracy = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(y_val, axis=1), tf.argmax(y_pred, axis=1)), tf.float32))
-        return loss, accuracy
+        return loss
 
     def train(self, X, y, batch_size=32, epochs=config.EPOCHS, learning_rate=0.001, val_size=0.2):
         self.optimizer = Adam(learning_rate)
@@ -85,7 +84,7 @@ class NeuroInceptDecoder(tf.keras.Model):
 
         X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=val_size, shuffle=True)
 
-        metrics = pd.DataFrame(columns=['Epoch', 'Train Loss', 'Train Accuracy', 'Validation Loss', 'Validation Accuracy'])
+        metrics = pd.DataFrame(columns=['Epoch', 'Train Loss',  'Validation Loss'])
 
         for epoch in range(epochs):
             epoch_loss = 0
@@ -109,16 +108,14 @@ class NeuroInceptDecoder(tf.keras.Model):
             epoch_loss /= num_batches
             epoch_accuracy /= num_batches
 
-            val_loss, val_accuracy = self.eval(X_val, y_val)
+            val_loss = self.eval(X_val, y_val)
 
             metrics = pd.concat([metrics, pd.DataFrame({
                 'Epoch': [epoch + 1],
                 'Train Loss': [epoch_loss.numpy()],
-                'Train Accuracy': [epoch_accuracy.numpy()],
                 'Validation Loss': [val_loss.numpy()],
-                'Validation Accuracy': [val_accuracy.numpy()]
             })], ignore_index=True)
 
-            print(f"Epoch {epoch + 1}/{epochs}, Train Loss: {epoch_loss.numpy()}, Train Accuracy: {epoch_accuracy.numpy()}, Validation Loss: {val_loss.numpy()}, Validation Accuracy: {val_accuracy.numpy()}")
+            print(f"Epoch {epoch + 1}/{epochs}, Train Loss: {epoch_loss.numpy()} Validation Loss: {val_loss.numpy()}")
 
         return metrics

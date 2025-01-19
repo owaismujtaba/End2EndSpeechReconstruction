@@ -22,4 +22,4 @@ TARGET_AUDIO_SR = 16000
 NO_FORMANTS = 128
 
 # Training Parameters
-EPOCHS = 1
+EPOCHS = 100

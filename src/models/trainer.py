@@ -15,7 +15,7 @@ class ModelTrainer:
         self.val_size = val_size
         self.dir = config.TRAINED_DIR
         self.model_dir = Path(self.dir, 'Models', model_name)
-        self.model_path = Path(self.model_dir, model_name)
+        self.model_path = Path(self.model_dir, f'{model_name}.h5')
         os.makedirs(self.model_dir, exist_ok=True)
 
         
@@ -27,7 +27,6 @@ class ModelTrainer:
         history = model.train(X, y)
         
         history_path = Path(self.model_dir, 'history.csv')
-        pdb.set_trace()
         history.to_csv(history_path)
         model.save(self.model_path)
         print("✅ Model Training Complete ✅")
