@@ -87,28 +87,59 @@ class NeuroInceptDecoder(tf.keras.Model):
         loss = self.compiled_loss(y_val, y_pred)
         return loss
 
-    def train(self, X, y,learning_rate=0.001, val_size=0.2):
+    def train(self, X, y, learning_rate=0.001, val_size=0.2):
+        print("🔧 Starting Model Training Process 🔧")
+        print(f"🟢 Input Data Shapes: X={X.shape}, y={y.shape}")
+        print(f"🔄 Splitting data with validation size: {val_size}")
+
+        print("⚙️ Compiling the model...")
         self.compile(
             optimizer=Adam(learning_rate),
             loss=tf.keras.losses.MeanSquaredError(name='loss'),
-            metrics=['accuracy']
+            metrics=['accuracy', tf.keras.metrics.MeanAbsoluteError(name='mae')]
         )
+        print(f"✅ Model compiled with learning_rate={learning_rate}")
 
         X_train, X_val, y_train, y_val = train_test_split(
-            X, y, 
-            test_size=val_size, 
-            shuffle=True
+            X, y,
+            test_size=val_size,
+            shuffle=True,
+            random_state=42  
         )
+        print(f"📊 Training Data Shapes: X_train={X_train.shape}, y_train={y_train.shape}")
+        print(f"📊 Validation Data Shapes: X_val={X_val.shape}, y_val={y_val.shape}")
 
+        print("🚀 Training the model...")
         history = self.fit(
             X_train, y_train,
             validation_data=(X_val, y_val),
             batch_size=config.BATCH_SIZE,
             epochs=config.EPOCHS,
             verbose=1,
-            callbacks=[early_stopping]
+            callbacks=[
+                early_stopping, 
+                tf.keras.callbacks.ModelCheckpoint(
+                    filepath='best_model.h5',
+                    save_best_only=True,
+                    monitor='val_loss',
+                    mode='min',
+                    verbose=1
+                ),
+                tf.keras.callbacks.ReduceLROnPlateau(
+                    monitor='val_loss',
+                    factor=0.2,
+                    patience=5,
+                    verbose=1,
+                    min_lr=1e-6
+                )
+            ]
         )
+        print("✅ Model training completed")
 
-        return pd.DataFrame(history.history)
+        history_df = pd.DataFrame(history.history)
+        print(f"📈 Training history keys: {list(history.history.keys())}")
+        print(f"💾 First few rows of training history:\n{history_df.head()}")
 
-    
+        return history_df
+
+        

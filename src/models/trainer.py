@@ -25,21 +25,35 @@ class ModelTrainer:
 
     def train_model(self, model, X, y):
         self.model = model
-        print("易 Training Model 易")
+        print("🔧 Starting Model Training 🔧")
+        print(f"🟢 Initial Data Shapes: X={X.shape}, y={y.shape}")
+        
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True)
+        print(f"📊 Training Data Shapes: X_train={X_train.shape}, y_train={y_train.shape}")
+        print(f"📊 Test Data Shapes: X_test={X_test.shape}, y_test={y_test.shape}")
 
         history = self.model.train(X_train, y_train)
-        self.evaluate_model(X_test, y_test)
+        print("✅ Model training completed")
+
         history_path = Path(self.model_dir, 'history.csv')
         history.to_csv(history_path)
+        print(f"💾 Training history saved at: {history_path}")
+
         model.save(self.model_path)
-        print("✅ Model Training Complete ✅")
+        print(f"💾 Model saved at: {self.model_path}")
+
+        self.evaluate_model(X_test, y_test)
 
     def evaluate_model(self, X, y):
-        pdb.set_trace()
+        print("🔍 Evaluating Model 🔍")
+        print(f"🟢 Input Data Shapes: X={X.shape}, y={y.shape}")
+
         predictions = self.model.predict(X)
-        pcc_values = [np.pearsonr(predictions[:, i], y[:, i])[0, 1] for i in range(predictions.shape[1])]
+        print(f"📊 Predictions Shape: {predictions.shape}")
+
+        pcc_values = [np.corrcoef(predictions[:, i], y[:, i])[0, 1] for i in range(predictions.shape[1])]
         pcc_mean = np.nanmean(pcc_values)
-        np.save(Path(self.model, 'pcc_values.npy'), pcc_values)
-        print(f'Mean PCC across {X.shape[1]} formants : {pcc_mean}')
-        
+        print(f"📊 Mean PCC: {pcc_mean}")
+
+        np.save(str(Path(self.model_dir, 'pcc_values.npy')), np.array(pcc_values))
+        print(f"💾 PCC values saved at: {str(Path(self.model_dir, 'pcc_values.npy'))}")

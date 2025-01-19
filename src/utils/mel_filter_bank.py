@@ -1,9 +1,12 @@
+"""
+    written by Neural Interfacing Lab
+    https://github.com/neuralinterfacinglab/SingleWordProductionDutch
+"""
+
+
 import numpy as np
 import math
-"""
-written by Neural Interfacing Lab
-https://github.com/neuralinterfacinglab/SingleWordProductionDutch
-"""
+
 class MelFilterBank():
     def __init__(self, specSize, numCoefficients, sampleRate):
         numBands = int(numCoefficients)
