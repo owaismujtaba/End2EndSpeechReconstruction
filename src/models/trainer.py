@@ -11,12 +11,14 @@ import config as config
 
 
 class ModelTrainer:
-    def __init__(self, model_name, val_size=0.15):
+    def __init__(self, model_name, subject_id, val_size=0.15):
         printSectionHeader("📊 Initializing ModelTrainer Class ")
         self.name = model_name
+        self.subjet_id = subject_id
         self.val_size = val_size
         self.dir = config.TRAINED_DIR
-        self.model_dir = Path(self.dir, 'Decoder', model_name)
+        self.sub_dir = Path(self.dir, subject_id)
+        self.model_dir = Path(self.sub_dir,  'Decoder', model_name)
         self.model_path = Path(self.model_dir, f'{model_name}.h5')
         os.makedirs(self.model_dir, exist_ok=True)
 
@@ -56,4 +58,5 @@ class ModelTrainer:
         print(f"📊 Mean PCC: {pcc_mean}")
 
         np.save(str(Path(self.model_dir, 'pcc_values.npy')), np.array(pcc_values))
+        self.pcc_mean = pcc_mean
         print(f"💾 PCC values saved at: {str(Path(self.model_dir, 'pcc_values.npy'))}")
