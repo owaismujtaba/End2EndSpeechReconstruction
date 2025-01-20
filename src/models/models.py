@@ -69,6 +69,25 @@ class NeuroInceptDecoder(tf.keras.Model):
 
         return output
 
+    def pcc_loss(self, y_true, y_pred):
+        assert y_true.shape == y_pred.shape, "Input shapes must match"
+    
+        y_pred = tf.reshape(y_pred, [-1])
+        y_true = tf.reshape(y_true, [-1])
+        
+        mean_pred = tf.reduce_mean(y_pred)
+        mean_true = tf.reduce_mean(y_true)
+        
+        covariance = tf.reduce_sum((y_pred - mean_pred) * (y_true - mean_true))
+        
+        std_pred = tf.sqrt(tf.reduce_sum((y_pred - mean_pred) ** 2))
+        std_true = tf.sqrt(tf.reduce_sum((y_true - mean_true) ** 2))
+        
+        pcc = covariance / (std_pred * std_true)
+        
+        loss = -pcc
+        return loss
+
     def train_step(self, data):
         X, y = data
 
@@ -95,7 +114,8 @@ class NeuroInceptDecoder(tf.keras.Model):
         print("⚙️ Compiling the model...")
         self.compile(
             optimizer=Adam(learning_rate),
-            loss=tf.keras.losses.MeanSquaredError(name='loss'),
+            #loss=tf.keras.losses.MeanSquaredError(name='loss'),
+            loss = self.pcc_loss,
             metrics=['accuracy', tf.keras.metrics.MeanAbsoluteError(name='mae')]
         )
         print(f"✅ Model compiled with learning_rate={learning_rate}")
@@ -103,7 +123,7 @@ class NeuroInceptDecoder(tf.keras.Model):
         X_train, X_val, y_train, y_val = train_test_split(
             X, y,
             test_size=val_size,
-            shuffle=True,
+            shuffle=False,
             random_state=42  
         )
         print(f"📊 Training Data Shapes: X_train={X_train.shape}, y_train={y_train.shape}")

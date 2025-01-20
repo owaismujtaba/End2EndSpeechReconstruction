@@ -30,7 +30,7 @@ class ModelTrainer:
         print("🔧 Starting Model Training 🔧")
         print(f"🟢 Initial Data Shapes: X={X.shape}, y={y.shape}")
         
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
         print(f"📊 Training Data Shapes: X_train={X_train.shape}, y_train={y_train.shape}")
         print(f"📊 Test Data Shapes: X_test={X_test.shape}, y_test={y_test.shape}")
 
